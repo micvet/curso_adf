@@ -18,6 +18,10 @@
 		"ls_datalake_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://dlscursoudemy2.dfs.core.windows.net/"
+		},
+		"AzureKeyVault1_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"defaultValue": "https://kv-adfcurso.vault.azure.net/"
 		}
 	},
 	"variables": {
@@ -148,6 +152,19 @@
 						"type": "SecureString",
 						"value": "[parameters('ls_datalake_accountKey')]"
 					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureKeyVault1')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureKeyVault",
+				"typeProperties": {
+					"baseUrl": "[parameters('AzureKeyVault1_properties_typeProperties_baseUrl')]"
 				}
 			},
 			"dependsOn": []
@@ -1073,178 +1090,6 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/ds_generico_csv')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/pratica01')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "ler  csvs",
-						"type": "GetMetadata",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataset": {
-								"referenceName": "ds_generico_csv",
-								"type": "DatasetReference",
-								"parameters": {
-									"containerName": "csvfiles",
-									"fileName": "*",
-									"separatorName": "*"
-								}
-							},
-							"fieldList": [
-								"childItems"
-							],
-							"storeSettings": {
-								"type": "AzureBlobFSReadSettings",
-								"recursive": true,
-								"enablePartitionDiscovery": false
-							},
-							"formatSettings": {
-								"type": "DelimitedTextReadSettings"
-							}
-						}
-					},
-					{
-						"name": "filtrar moviesDB",
-						"type": "Filter",
-						"dependsOn": [
-							{
-								"activity": "ler  csvs",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@activity('ler  csvs').output.childItems",
-								"type": "Expression"
-							},
-							"condition": {
-								"value": "@not(equals(item().name,'moviesDB.csv'))",
-								"type": "Expression"
-							}
-						}
-					},
-					{
-						"name": "lista de csvs",
-						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "filtrar moviesDB",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@activity('filtrar moviesDB').output.value",
-								"type": "Expression"
-							},
-							"activities": [
-								{
-									"name": "csv para parquet",
-									"type": "Copy",
-									"dependsOn": [],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"source": {
-											"type": "DelimitedTextSource",
-											"storeSettings": {
-												"type": "AzureBlobFSReadSettings",
-												"recursive": true,
-												"enablePartitionDiscovery": false
-											},
-											"formatSettings": {
-												"type": "DelimitedTextReadSettings"
-											}
-										},
-										"sink": {
-											"type": "ParquetSink",
-											"storeSettings": {
-												"type": "AzureBlobFSWriteSettings"
-											},
-											"formatSettings": {
-												"type": "ParquetWriteSettings"
-											}
-										},
-										"enableStaging": false,
-										"translator": {
-											"type": "TabularTranslator",
-											"typeConversion": true,
-											"typeConversionSettings": {
-												"allowDataTruncation": true,
-												"treatBooleanAsNumber": false
-											}
-										}
-									},
-									"inputs": [
-										{
-											"referenceName": "ds_generico_csv",
-											"type": "DatasetReference",
-											"parameters": {
-												"containerName": "csvfiles",
-												"fileName": {
-													"value": "@item().name",
-													"type": "Expression"
-												},
-												"separatorName": ";"
-											}
-										}
-									],
-									"outputs": [
-										{
-											"referenceName": "ds_generico_parquet",
-											"type": "DatasetReference",
-											"parameters": {
-												"containerName": "parquetfiles",
-												"fileName": {
-													"value": "@replace(item().name,'.csv','')",
-													"type": "Expression"
-												}
-											}
-										}
-									]
-								}
-							]
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {},
-					"cancelAfter": {}
-				},
-				"folder": {
-					"name": "adf_03_handson01"
-				},
-				"annotations": [],
-				"lastPublishTime": "2022-11-15T23:54:18Z"
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/ds_generico_csv')]",
-				"[concat(variables('factoryId'), '/datasets/ds_generico_parquet')]"
 			]
 		}
 	]
