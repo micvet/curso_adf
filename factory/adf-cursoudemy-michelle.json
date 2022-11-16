@@ -1,0 +1,9 @@
+{
+	"name": "adf-cursoudemy-michelle",
+	"location": "eastus2",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "780483ab-ee6b-4545-ab00-091cd34494fc",
+		"tenantId": "a59d5588-0401-424e-9e68-f7ff2f3f32c4"
+	}
+}
